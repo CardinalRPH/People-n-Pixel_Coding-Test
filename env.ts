@@ -22,7 +22,6 @@ const envSchema = z.object({
 
     APP_NAME: z.string(),
 
-    DATABASE_URL: z.url(),
     DATABASE_USER: z.string(),
     DATABASE_PASSWORD: z.string(),
     DATABASE_NAME: z.string(),
