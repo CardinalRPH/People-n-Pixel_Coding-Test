@@ -20,8 +20,7 @@ const envSchema = z.object({
 
     PORT: z.coerce.number(),
 
-    APP_NAME: z.string(),
-
+    DATABASE_URL: z.string(),
     DATABASE_USER: z.string(),
     DATABASE_PASSWORD: z.string(),
     DATABASE_NAME: z.string(),

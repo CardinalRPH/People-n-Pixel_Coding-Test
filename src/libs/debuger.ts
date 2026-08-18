@@ -1,7 +1,6 @@
 import debugLib from "debug";
-import processEnv from "../../env";
 
-const serverName = processEnv.APP_NAME
+const debuggerName = "[DEBUG]"
 
 type LogLevel = "info" | "warn" | "error";
 
@@ -22,6 +21,6 @@ const createDebug = (namespace: string) => {
     };
 }
 
-const debug = createDebug(serverName)
+const debug = createDebug(debuggerName)
 
 export default debug

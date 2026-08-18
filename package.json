@@ -10,7 +10,9 @@
     "dev": "nodemon",
     "build": "tsc",
     "lint": "oxlint ./src",
-    "lint:fix": "oxlint --fix ./src"
+    "lint:fix": "oxlint --fix ./src",
+    "db:migrate:dev": "dotenv -e .env.development -- cross-var psql %DATABASE_URL% -f src/migrations/01_init.sql",
+    "db:migrate:prod": "dotenv -e .env.production -- cross-var psql %DATABASE_URL% -f src/migrations/01_init.sql"
   },
   "dependencies": {
     "@asteasolutions/zod-to-openapi": "^9.1.0",

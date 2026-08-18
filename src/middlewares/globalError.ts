@@ -3,6 +3,7 @@ import { ZodError } from 'zod';
 import { StatusCodes } from 'http-status-codes';
 import debug from '../libs/debuger';
 import processEnv from '../../env';
+import { DatabaseError } from 'pg';
 
 export const errorHandler = (
     err: Error,
@@ -25,7 +26,32 @@ export const errorHandler = (
     }
 
     /// Database Error
-    
+    if (err instanceof DatabaseError) {
+        if (err.code === '23505') {
+            const field = err.detail?.match(/\((.*?)\)/)?.[1] || 'field';
+            return res.status(StatusCodes.CONFLICT).json({
+                message: `A record with this ${field} already exists.`,
+            });
+        }
+
+        if (err.code === '23503') {
+            return res.status(StatusCodes.BAD_REQUEST).json({
+                message: 'Referenced record does not exist or is in use.',
+            });
+        }
+
+        if (err.code === '23502') {
+            return res.status(StatusCodes.BAD_REQUEST).json({
+                message: `Field '${err.column}' cannot be null.`,
+            });
+        }
+
+        if (err.code === '22P02') {
+            return res.status(StatusCodes.BAD_REQUEST).json({
+                message: 'Invalid input data format.',
+            });
+        }
+    }
 
     // Custom Error
     if ('statusCode' in err && typeof (err as any).statusCode === 'number') {

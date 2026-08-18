@@ -5,7 +5,9 @@ const pool = new Pool({
     host: processEnv.DATABASE_HOST,
     database: processEnv.DATABASE_NAME,
     password: processEnv.DATABASE_PASSWORD,
-    port: processEnv.PORT
+    port: processEnv.DATABASE_PORT
 })
+
+export type queryParamsType = string | number | Date | boolean | null;
 
 export default pool

@@ -1,0 +1,11 @@
+{
+    "watch": [
+        "./"
+    ],
+    "ext": "ts",
+    "exec": "ts-node ./bin/www.ts",
+    "env": {
+        "DEBUG": "[DEBUG]:*",
+        "NODE_ENV": "development"
+    }
+}

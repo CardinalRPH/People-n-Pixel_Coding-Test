@@ -53,7 +53,7 @@ export type mentionRawDataSchemaType = z.infer<typeof mentionRawDataSchema>
 
 export const bulkRawDataInsertSchema = z.array(mentionRawDataSchema)
 
-export const SearchQuerySchema = z.object({
+export const searchQuerySchema = z.object({
     q: z.string("Query must be string")
         .optional()
         .openapi({ example: "Ringgit strengthens against US dollar in early trade" }),
@@ -85,7 +85,7 @@ export const SearchQuerySchema = z.object({
         .openapi({ example: "10" }),
 });
 
-export const StatsQuerySchema = z.object({
+export const statsQuerySchema = z.object({
     group_by: z.enum(['source', 'day'], {
         error: "group_by must be either 'source' or 'day"
     }).openapi({ example: "day" }),

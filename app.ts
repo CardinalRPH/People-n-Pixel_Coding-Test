@@ -20,7 +20,7 @@ app.use(static_(join(__dirname, "public")));
 app.set("trust proxy", 1);
 
 
-app.use("/app/v1/", indexRouter);
+app.use("/", indexRouter);
 app.use('/docs/v1/', swaggerUi.serve, swaggerUi.setup(openApiDocument));
 app.use(errorHandler)
 

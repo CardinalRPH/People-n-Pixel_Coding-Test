@@ -1,6 +1,7 @@
 import crypto from 'crypto';
 import { mentionRawDataSchemaType } from '../schemas/dataSchema';
 
+
 const computeDedupHash = (normalizedContent: string, url: string | null) => {
     const cleanUrl = url ? url.split('?')[0].toLowerCase().trim() : '';
     const cleanContent = normalizedContent.toLowerCase().replace(/\s+/g, ' ').trim();
@@ -17,7 +18,12 @@ const normalizeSource = (source: string) => {
     return clean;
 }
 
-export const normalizeMention = (raw: mentionRawDataSchemaType) => {
+export type normalizeItemData = mentionRawDataSchemaType & {
+    source_normalized: string
+    dedup_hash: string
+}
+
+export const normalizeMention = (raw: mentionRawDataSchemaType): normalizeItemData => {
     const sourceNorm = normalizeSource(raw.source);
     const dedupHash = computeDedupHash(raw.content, raw.url);
 
@@ -26,8 +32,8 @@ export const normalizeMention = (raw: mentionRawDataSchemaType) => {
         source: raw.source.trim(),
         source_normalized: sourceNorm,
         title: raw.title,
-        content: raw.title,
-        url: raw.url ? raw.url.trim() : null,
+        content: raw.content,
+        url: raw.url,
         author: raw.author ? raw.author.trim() : null,
         published_at: raw.published_at,
         engagement: raw.engagement,
