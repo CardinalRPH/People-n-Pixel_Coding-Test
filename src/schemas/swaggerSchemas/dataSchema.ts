@@ -1,5 +1,5 @@
 import { RouteConfig } from "@asteasolutions/zod-to-openapi";
-import { bulkRawDataInsertSchema, searchQuerySchema } from "../dataSchema";
+import { bulkRawDataInsertSchema, searchQuerySchema, statsQuerySchema } from "../dataSchema";
 import { StatusCodes } from "http-status-codes";
 import z from "zod";
 
@@ -17,7 +17,7 @@ export const bulkRawDataInsertRouteConfig: RouteConfig = {
     },
     responses: {
         [StatusCodes.OK]: {
-            description: 'Data processed',
+            description: 'Data successfully insert',
             content: {
                 'application/json': {
                     schema: z.object({
@@ -46,10 +46,11 @@ export const searchQueryRouteConfig: RouteConfig = {
     },
     responses: {
         [StatusCodes.OK]: {
-            description: 'Data processed',
+            description: 'Data successfully get',
             content: {
                 'application/json': {
                     schema: z.object({
+                        message: z.string().openapi({ example: "Data Fetched" }),
                         data: bulkRawDataInsertSchema,
                         pagination: z.object({
                             page: z.number().openapi({ example: 1 }),
@@ -57,6 +58,37 @@ export const searchQueryRouteConfig: RouteConfig = {
                             total: z.number().openapi({ example: 100 }),
                             totalPage: z.number().openapi({ example: 2 })
                         })
+                    })
+                },
+            },
+        },
+        [StatusCodes.INTERNAL_SERVER_ERROR]: {
+            description: 'Internal server error',
+        },
+    },
+};
+
+
+export const statshQueryRouteConfig: RouteConfig = {
+    method: 'get',
+    path: '/mentions/stats',
+    summary: 'Get stats of the data',
+    tags: ['Mention'],
+    request: {
+        query: statsQuerySchema
+    },
+    responses: {
+        [StatusCodes.OK]: {
+            description: 'Data successfully get',
+            content: {
+                'application/json': {
+                    schema: z.object({
+                        message: z.string().openapi({ example: "Data Fetched" }),
+                        group_by: z.enum(['source', 'day']).openapi({ example: 'day' }),
+                        data: z.array(z.object({
+                            label: z.string().openapi({ example: "2026-08-15" }),
+                            count: z.number().openapi({ example: 1 })
+                        }))
                     })
                 },
             },

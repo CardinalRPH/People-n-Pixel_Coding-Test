@@ -1,6 +1,6 @@
 import { NextFunction, Request, Response } from "express";
 import getRequestData from "../utils/getRequestData";
-import { bulkRawDataInsertSchema, searchQuerySchema } from "../schemas/dataSchema";
+import { bulkRawDataInsertSchema, searchQuerySchema, statsQuerySchema } from "../schemas/dataSchema";
 import { normalizeItemData, normalizeMention } from "../utils/normalizer";
 import { StatusCodes } from "http-status-codes";
 import pool, { queryParamsType } from "../libs/db";
@@ -120,6 +120,7 @@ export const searchHandler = async (req: Request, res: Response, next: NextFunct
         const total = parseInt(countRes.rows[0].count, 10);
 
         return res.status(StatusCodes.OK).json({
+            message: "Data Fetched",
             data: dataRes.rows,
             pagination: {
                 page,
@@ -136,7 +137,39 @@ export const searchHandler = async (req: Request, res: Response, next: NextFunct
 
 export const statsHandler = async (req: Request, res: Response, next: NextFunction) => {
     try {
+        const { queryData } = getRequestData({ querySchema: statsQuerySchema }, req)
+        const { group_by } = queryData
 
+        if (group_by === "source") {
+            const sql = `
+        SELECT source_normalized AS label, COUNT(*)::int AS count
+        FROM mentions
+        GROUP BY source_normalized
+        ORDER BY count DESC;
+      `;
+            const { rows } = await pool.query(sql);
+            return res.status(StatusCodes.OK).json({
+                message: "Data Fetched",
+                group_by: 'source',
+                data: rows
+            });
+        }
+
+        if (group_by === 'day') {
+            const sql = `
+        SELECT TO_CHAR(published_at, 'YYYY-MM-DD') AS label, COUNT(*)::int AS count
+        FROM mentions
+        WHERE published_at IS NOT NULL
+        GROUP BY TO_CHAR(published_at, 'YYYY-MM-DD')
+        ORDER BY label DESC;
+      `;
+            const { rows } = await pool.query(sql);
+            return res.status(StatusCodes.OK).json({
+                message: "Data Fetched",
+                group_by: 'day',
+                data: rows
+            });
+        }
     } catch (error) {
         next(error)
     }
