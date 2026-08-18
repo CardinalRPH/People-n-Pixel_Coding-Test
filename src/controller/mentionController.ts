@@ -40,8 +40,6 @@ export const bulkInsertHandler = async (req: Request, res: Response, next: NextF
 
         })
 
-        console.log(queryParams);
-
 
         const bulkQuery = `
       INSERT INTO mentions (
