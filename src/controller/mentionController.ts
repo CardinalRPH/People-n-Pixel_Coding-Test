@@ -1,7 +1,7 @@
 import { NextFunction, Request, Response } from "express";
 import getRequestData from "../utils/getRequestData";
 import { bulkRawDataInsertSchema, searchQuerySchema, statsQuerySchema } from "../schemas/dataSchema";
-import { normalizeItemData, normalizeMention } from "../utils/normalizer";
+import { normalizeMention } from "../utils/normalizer";
 import { StatusCodes } from "http-status-codes";
 import pool, { queryParamsType } from "../libs/db";
 
