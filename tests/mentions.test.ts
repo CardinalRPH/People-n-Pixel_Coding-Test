@@ -4,6 +4,7 @@ import { StatusCodes } from 'http-status-codes';
 
 import router from '../src/routes';
 import pool from '../src/libs/db';
+import dummyData from '../src/data/dummy';
 
 // Setup Express app instance for Supertest
 const app: Express = express();
@@ -32,62 +33,33 @@ describe('Mentions API Endpoints', () => {
        POST /internal/mentions/bulk
        ======================================================================== */
     describe('POST /internal/mentions/bulk', () => {
-        const validRawMention = {
-            external_id: 'str-99120',
-            source: 'The Star',
-            title: 'Ringgit strengthens against US dollar',
-            content: '<p>The ringgit opened higher against the greenback.</p>',
-            url: 'https://www.thestar.com.my/business/2026/08/10/ringgit-strengthens',
-            author: 'John Doe',
-            engagement: '415',
-            published_at: '2026-08-15T13:30:00+08:00',
-        };
 
-        it('should successfully bulk insert raw mentions', async () => {
+        it('should successfully bulk insert the full dummy dataset with transforms and handle conflicts', async () => {
             const response = await request(app)
                 .post('/internal/mentions/bulk')
-                .send([validRawMention]);
+                .send(dummyData);
 
             expect(response.status).toBe(StatusCodes.CREATED);
             expect(response.body).toEqual({
                 message: 'Data processed',
                 data: {
-                    processed: 1,
-                    inserted: 1,
+                    processed: 15,
+                    inserted: 14,
                     modified: 0,
                 },
             });
 
-            // Verify row exists in DB
-            const dbRes = await pool.query('SELECT * FROM mentions WHERE external_id = $1', ['str-99120']);
-            expect(dbRes.rows.length).toBe(1);
-            expect(dbRes.rows[0].content).toBe('The ringgit opened higher against the greenback.'); // HTML stripped
-        });
+            // Check HTML stripping transform on content field
+            const dbResHtml = await pool.query('SELECT content FROM mentions WHERE external_id = $1', ['nst-40130']);
+            expect(dbResHtml.rows[0].content).toBe('Several roads in Shah Alam were impassable after two hours of heavy rain.alert(1)');
 
-        it('should handle UPSERT on conflict (source_normalized + dedup_hash)', async () => {
-            // First insert
-            await request(app).post('/internal/mentions/bulk').send([validRawMention]);
+            // Check string-to-integer engagement conversion
+            const dbResEngagement = await pool.query('SELECT engagement FROM mentions WHERE external_id = $1', ['nst-40021']);
+            expect(dbResEngagement.rows[0].engagement).toBe(1204);
 
-            // Second insert with higher engagement
-            const duplicateMention = {
-                ...validRawMention,
-                engagement: '500', // Increased engagement
-            };
-
-            const response = await request(app)
-                .post('/internal/mentions/bulk')
-                .send([duplicateMention]);
-
-            expect(response.status).toBe(StatusCodes.CREATED);
-            expect(response.body.data).toEqual({
-                processed: 1,
-                inserted: 0,
-                modified: 1,
-            });
-
-            // Check updated engagement in DB
-            const dbRes = await pool.query('SELECT engagement FROM mentions WHERE external_id = $1', ['str-99120']);
-            expect(dbRes.rows[0].engagement).toBe(500);
+            // Check UPSERT updated engagement value to maximum (415)
+            const dbResUpsert = await pool.query('SELECT engagement FROM mentions WHERE external_id = $1', ['str-99120']);
+            expect(dbResUpsert.rows[0].engagement).toBe(415);
         });
 
         it('should return 200 OK with message when body array is empty', async () => {
@@ -103,7 +75,7 @@ describe('Mentions API Endpoints', () => {
 
         it('should fail validation when payload structure is invalid', async () => {
             const invalidMention = {
-                external_id: '', // Min 1 error
+                external_id: '', // Min length 1 validation error
                 source: 'The Star',
                 url: 'invalid-url-string',
             };
@@ -115,7 +87,6 @@ describe('Mentions API Endpoints', () => {
             expect(response.status).toBeGreaterThanOrEqual(StatusCodes.BAD_REQUEST);
         });
     });
-
     /* ========================================================================
        GET /mentions
        ======================================================================== */

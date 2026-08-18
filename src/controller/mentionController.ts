@@ -1,7 +1,7 @@
 import { NextFunction, Request, Response } from "express";
 import getRequestData from "../utils/getRequestData";
 import { bulkRawDataInsertSchema, searchQuerySchema, statsQuerySchema } from "../schemas/dataSchema";
-import { normalizeMention } from "../utils/normalizer";
+import { normalizeItemData, normalizeMention } from "../utils/normalizer";
 import { StatusCodes } from "http-status-codes";
 import pool, { queryParamsType } from "../libs/db";
 
@@ -14,7 +14,22 @@ export const bulkInsertHandler = async (req: Request, res: Response, next: NextF
 
             })
         }
-        const normalizedItem = bodyData.map(normalizeMention)
+        const rawNormalizedItem = bodyData.map(normalizeMention);
+
+        const dedupMap = new Map<string, normalizeItemData>();
+
+        for (const item of rawNormalizedItem) {
+            const key = `${item.source_normalized}:${item.dedup_hash}`;
+
+            if (dedupMap.has(key)) {
+                const existing = dedupMap.get(key)!;
+                existing.engagement = Math.max(existing.engagement, item.engagement);
+            } else {
+                dedupMap.set(key, { ...item });
+            }
+        }
+
+        const normalizedItem = Array.from(dedupMap.values());
 
         const rowToProcess = 10
         const valuePerTuple: string[] = []
