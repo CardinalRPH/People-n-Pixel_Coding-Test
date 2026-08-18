@@ -113,6 +113,9 @@ describe('Mentions API Endpoints', () => {
                 limit: 10,
                 total: 3,
                 totalPages: 1,
+                hasNext: false,
+                nextPage: null,
+                prevPage: null
             });
         });
 
@@ -160,6 +163,9 @@ describe('Mentions API Endpoints', () => {
                 limit: 2,
                 total: 3,
                 totalPages: 2,
+                hasNext: true,
+                nextPage: 2,
+                prevPage: null
             });
         });
     });

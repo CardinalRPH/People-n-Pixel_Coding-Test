@@ -1,0 +1,442 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simple Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+
+<body class="bg-slate-900 text-slate-100 min-h-screen p-8">
+    <div class="max-w-6xl mx-auto space-y-8">
+
+        <!-- Header -->
+        <header class="flex justify-between items-center border-b border-slate-700 pb-4">
+            <div>
+                <h1 class="text-2xl font-bold tracking-tight">Simple Dashboard</h1>
+                <p class="text-xs text-slate-400 mt-1">Read-only preview & test verification</p>
+            </div>
+            <div class="flex space-x-3">
+                <button onclick="openIngestModal()"
+                    class="bg-emerald-600 hover:bg-emerald-500 text-white font-medium px-4 py-2 rounded-md text-sm transition">
+                    + Bulk Ingest Data
+                </button>
+                <button onclick="fetchData()"
+                    class="bg-indigo-600 hover:bg-indigo-500 text-white font-medium px-4 py-2 rounded-md text-sm transition">
+                    Refresh All
+                </button>
+            </div>
+        </header>
+
+        <!-- Stats Section -->
+        <section>
+            <h2 class="text-lg font-semibold text-slate-300 mb-3">Statistics</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+
+                <!-- Stats by Source -->
+                <div class="bg-slate-800 border border-slate-700 p-4 rounded-lg">
+                    <h3 class="text-sm font-medium text-slate-400 mb-3">Mentions by Source</h3>
+                    <div id="stats-source" class="space-y-2 text-sm text-slate-300">
+                        <p class="text-slate-500 italic">Loading...</p>
+                    </div>
+                </div>
+
+                <!-- Stats by Day -->
+                <div class="bg-slate-800 border border-slate-700 p-4 rounded-lg">
+                    <h3 class="text-sm font-medium text-slate-400 mb-3">Mentions by Day</h3>
+                    <div id="stats-day" class="space-y-2 text-sm text-slate-300">
+                        <p class="text-slate-500 italic">Loading...</p>
+                    </div>
+                </div>
+
+            </div>
+        </section>
+
+        <!-- Filter & Search Controls -->
+        <section class="bg-slate-800 border border-slate-700 p-4 rounded-lg">
+            <h2 class="text-sm font-medium text-slate-400 mb-3">Filter Mentions</h2>
+            <form id="filter-form" onsubmit="handleSearch(event)" class="grid grid-cols-1 md:grid-cols-4 gap-4">
+
+                <div>
+                    <label for="filter-q" class="block text-xs text-slate-400 mb-1">Keyword (q)</label>
+                    <input type="text" id="filter-q" placeholder="e.g. Ringgit"
+                        class="w-full bg-slate-900 border border-slate-700 rounded px-3 py-1.5 text-sm text-slate-200 focus:outline-none focus:border-indigo-500">
+                </div>
+
+                <div>
+                    <label for="filter-source" class="block text-xs text-slate-400 mb-1">Source</label>
+                    <input type="text" id="filter-source" placeholder="e.g. The Star"
+                        class="w-full bg-slate-900 border border-slate-700 rounded px-3 py-1.5 text-sm text-slate-200 focus:outline-none focus:border-indigo-500">
+                </div>
+
+                <div>
+                    <label for="filter-from" class="block text-xs text-slate-400 mb-1">From Date</label>
+                    <input type="date" id="filter-from"
+                        class="w-full bg-slate-900 border border-slate-700 rounded px-3 py-1.5 text-sm text-slate-200 focus:outline-none focus:border-indigo-500">
+                </div>
+
+                <div>
+                    <label for="filter-to" class="block text-xs text-slate-400 mb-1">To Date</label>
+                    <input type="date" id="filter-to"
+                        class="w-full bg-slate-900 border border-slate-700 rounded px-3 py-1.5 text-sm text-slate-200 focus:outline-none focus:border-indigo-500">
+                </div>
+
+                <div class="md:col-span-4 flex justify-end space-x-2 pt-2 border-t border-slate-700/50">
+                    <button type="button" onclick="resetFilters()"
+                        class="px-3 py-1.5 text-xs text-slate-400 hover:text-slate-200 transition">
+                        Reset Filters
+                    </button>
+                    <button type="submit"
+                        class="bg-indigo-600 hover:bg-indigo-500 text-white font-medium px-4 py-1.5 rounded text-xs transition">
+                        Apply Filters
+                    </button>
+                </div>
+
+            </form>
+        </section>
+
+        <!-- Mentions Table Section -->
+        <section>
+            <div class="flex justify-between items-center mb-3">
+                <h2 class="text-lg font-semibold text-slate-300">Recent Mentions</h2>
+                <span id="pagination-info" class="text-xs text-slate-400">Loading page info...</span>
+            </div>
+
+            <div class="bg-slate-800 border border-slate-700 rounded-lg overflow-hidden">
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left text-sm text-slate-300">
+                        <thead class="bg-slate-900/50 text-xs uppercase text-slate-400 border-b border-slate-700">
+                            <tr>
+                                <th class="px-4 py-3">Title</th>
+                                <th class="px-4 py-3">Source</th>
+                                <th class="px-4 py-3">Author</th>
+                                <th class="px-4 py-3">Engagement</th>
+                                <th class="px-4 py-3">Published At</th>
+                            </tr>
+                        </thead>
+                        <tbody id="mentions-list" class="divide-y divide-slate-700">
+                            <tr>
+                                <td colspan="5" class="px-4 py-4 text-slate-500 italic text-center">Loading mentions...
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Pagination Controls -->
+                <div class="flex items-center justify-between px-4 py-3 bg-slate-900/40 border-t border-slate-700">
+                    <button id="btn-prev" onclick="goToPage(targetPrevPage)" disabled
+                        class="px-3 py-1 text-xs font-medium bg-slate-700 text-slate-300 rounded hover:bg-slate-600 disabled:opacity-40 disabled:cursor-not-allowed transition">
+                        &larr; Previous
+                    </button>
+
+                    <span id="page-indicator" class="text-xs font-mono text-slate-400">Page 1</span>
+
+                    <button id="btn-next" onclick="goToPage(targetNextPage)" disabled
+                        class="px-3 py-1 text-xs font-medium bg-slate-700 text-slate-300 rounded hover:bg-slate-600 disabled:opacity-40 disabled:cursor-not-allowed transition">
+                        Next &rarr;
+                    </button>
+                </div>
+            </div>
+        </section>
+
+    </div>
+
+    <!-- Bulk Ingest Dynamic Modal -->
+    <div id="ingest-modal"
+        class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm hidden flex items-center justify-center p-4 z-50">
+        <div
+            class="bg-slate-900 border border-slate-700 rounded-xl w-full max-w-4xl max-h-[90vh] flex flex-col shadow-2xl">
+
+            <!-- Modal Header -->
+            <div class="p-4 border-b border-slate-700 flex justify-between items-center">
+                <div>
+                    <h3 class="text-lg font-bold text-slate-100">Bulk Ingest Mentions</h3>
+                    <p class="text-xs text-slate-400">POST /internal/mentions/bulk</p>
+                </div>
+                <button onclick="closeIngestModal()"
+                    class="text-slate-400 hover:text-slate-200 text-xl font-bold">&times;</button>
+            </div>
+
+            <!-- Modal Body (Dynamic Cards Container) -->
+            <div class="p-6 overflow-y-auto space-y-6 flex-1" id="items-container">
+                <!-- Dynamic Mention Forms insert here -->
+            </div>
+
+            <!-- Modal Footer -->
+            <div class="p-4 border-t border-slate-700 flex justify-between items-center bg-slate-900/50">
+                <button onclick="addMentionField()"
+                    class="bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 px-4 py-2 rounded-md text-xs font-medium transition">
+                    + Add Another Item
+                </button>
+                <div class="space-x-2">
+                    <button onclick="closeIngestModal()"
+                        class="px-4 py-2 text-xs text-slate-400 hover:text-slate-200 transition">
+                        Cancel
+                    </button>
+                    <button onclick="submitBulkIngest()"
+                        class="bg-emerald-600 hover:bg-emerald-500 text-white font-medium px-5 py-2 rounded-md text-xs transition">
+                        Submit Bulk Data
+                    </button>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <script>
+        // Pagination & Filter State
+        let currentPage = 1;
+        const limit = 10;
+        let targetNextPage = null;
+        let targetPrevPage = null;
+
+        async function fetchData() {
+            await Promise.all([
+                loadStats('source', 'stats-source'),
+                loadStats('day', 'stats-day'),
+                loadMentions()
+            ]);
+        }
+
+        async function loadStats(groupBy, targetElementId) {
+            const container = document.getElementById(targetElementId);
+            try {
+                const res = await fetch(`/mentions/stats?group_by=${groupBy}`);
+                const result = await res.json();
+
+                const items = result.data || [];
+                if (!items.length) {
+                    container.innerHTML = `<p class="text-slate-500 italic">No ${groupBy} statistics found.</p>`;
+                    return;
+                }
+
+                container.innerHTML = items.map(item => `
+          <div class="flex justify-between border-b border-slate-700/50 pb-1">
+            <span class="font-medium">${item.label || 'Unknown'}</span>
+            <span class="text-indigo-400 font-mono">${item.count}</span>
+          </div>
+        `).join('');
+            } catch (err) {
+                container.innerHTML = `<p class="text-red-400 text-xs">Failed to load ${groupBy} stats.</p>`;
+            }
+        }
+
+        async function loadMentions() {
+            const container = document.getElementById('mentions-list');
+            const paginationContainer = document.getElementById('pagination-info');
+            const pageIndicator = document.getElementById('page-indicator');
+            const btnPrev = document.getElementById('btn-prev');
+            const btnNext = document.getElementById('btn-next');
+
+            const q = document.getElementById('filter-q').value.trim();
+            const source = document.getElementById('filter-source').value.trim();
+            const from = document.getElementById('filter-from').value;
+            const to = document.getElementById('filter-to').value;
+
+            const params = new URLSearchParams({
+                page: currentPage,
+                limit: limit
+            });
+
+            if (q) params.append('q', q);
+            if (source) params.append('source', source);
+            if (from) params.append('from', new Date(from).toISOString());
+            if (to) params.append('to', new Date(to).toISOString());
+
+            try {
+                const res = await fetch(`/mentions?${params.toString()}`);
+                const result = await res.json();
+
+                const items = result.data || [];
+                const pagination = result.pagination || {};
+
+                currentPage = pagination.page || currentPage;
+                targetNextPage = pagination.nextPage;
+                targetPrevPage = pagination.prevPage;
+
+                paginationContainer.textContent = `Showing page ${currentPage} of ${pagination.totalPage || 1} (${pagination.total || 0} total items)`;
+                pageIndicator.textContent = `Page ${currentPage} of ${pagination.totalPage || 1}`;
+
+                btnPrev.disabled = targetPrevPage === null;
+                btnNext.disabled = !pagination.hasNext || targetNextPage === null;
+
+                if (!items.length) {
+                    container.innerHTML = `
+            <tr>
+              <td colspan="5" class="px-4 py-4 text-slate-500 text-center">No mentions matching your criteria found.</td>
+            </tr>`;
+                    return;
+                }
+
+                container.innerHTML = items.map(item => `
+          <tr class="hover:bg-slate-700/30 transition">
+            <td class="px-4 py-3 font-medium text-slate-200">
+              ${item.url ? `<a href="${item.url}" target="_blank" class="hover:underline text-indigo-300">${item.title || 'Untitled'}</a>` : (item.title || 'Untitled')}
+            </td>
+            <td class="px-4 py-3"><span class="px-2 py-0.5 rounded bg-slate-700 text-xs">${item.source || 'N/A'}</span></td>
+            <td class="px-4 py-3 text-slate-400">${item.author || '-'}</td>
+            <td class="px-4 py-3 text-slate-400 font-mono text-xs">${item.engagement ?? 0}</td>
+            <td class="px-4 py-3 text-slate-400 font-mono text-xs">${item.published_at ? new Date(item.published_at).toISOString().split('T')[0] : 'N/A'}</td>
+          </tr>
+        `).join('');
+            } catch (err) {
+                container.innerHTML = `
+          <tr>
+            <td colspan="5" class="px-4 py-4 text-red-400 text-center">Failed to load mentions.</td>
+          </tr>`;
+            }
+        }
+
+        function handleSearch(event) {
+            event.preventDefault();
+            currentPage = 1;
+            loadMentions();
+        }
+
+        function resetFilters() {
+            document.getElementById('filter-form').reset();
+            currentPage = 1;
+            loadMentions();
+        }
+
+        function goToPage(targetPage) {
+            if (targetPage !== null && targetPage !== undefined) {
+                currentPage = targetPage;
+                loadMentions();
+            }
+        }
+
+        // Modal & Dynamic Form Logic
+        function openIngestModal() {
+            const container = document.getElementById('items-container');
+            container.innerHTML = '';
+            addMentionField(); // Seed with 1 item by default
+            document.getElementById('ingest-modal').classList.remove('hidden');
+        }
+
+        function closeIngestModal() {
+            document.getElementById('ingest-modal').classList.add('hidden');
+        }
+
+        function addMentionField() {
+            const container = document.getElementById('items-container');
+            const id = Date.now() + Math.random().toString(36).substring(2, 5);
+
+            const itemHTML = `
+        <div class="item-card bg-slate-800/80 border border-slate-700 p-4 rounded-lg relative space-y-3" id="card-${id}">
+          <div class="flex justify-between items-center border-b border-slate-700/60 pb-2">
+            <span class="text-xs font-bold text-slate-400 uppercase tracking-wider">Mention Item</span>
+            <button onclick="removeMentionField('card-${id}')" class="text-xs text-red-400 hover:text-red-300 font-medium">Remove</button>
+          </div>
+          
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+            <div>
+              <label class="block text-xs text-slate-400 mb-1">External ID *</label>
+              <input type="text" name="external_id" required placeholder="str-99120" class="w-full bg-slate-900 border border-slate-700 rounded px-2.5 py-1 text-xs text-slate-200">
+            </div>
+            <div>
+              <label class="block text-xs text-slate-400 mb-1">Source *</label>
+              <input type="text" name="source" required placeholder="The Star" class="w-full bg-slate-900 border border-slate-700 rounded px-2.5 py-1 text-xs text-slate-200">
+            </div>
+            <div>
+              <label class="block text-xs text-slate-400 mb-1">Title</label>
+              <input type="text" name="title" placeholder="Ringgit strengthens against US dollar..." class="w-full bg-slate-900 border border-slate-700 rounded px-2.5 py-1 text-xs text-slate-200">
+            </div>
+            <div>
+              <label class="block text-xs text-slate-400 mb-1">URL *</label>
+              <input type="url" name="url" required placeholder="https://www.thestar.com.my/..." class="w-full bg-slate-900 border border-slate-700 rounded px-2.5 py-1 text-xs text-slate-200">
+            </div>
+            <div>
+              <label class="block text-xs text-slate-400 mb-1">Author</label>
+              <input type="text" name="author" placeholder="John Doe" class="w-full bg-slate-900 border border-slate-700 rounded px-2.5 py-1 text-xs text-slate-200">
+            </div>
+            <div>
+              <label class="block text-xs text-slate-400 mb-1">Engagement (0-9 string only)</label>
+              <input type="text" name="engagement" placeholder="415" oninput="this.value = this.value.replace(/[^0-9]/g, '')" class="w-full bg-slate-900 border border-slate-700 rounded px-2.5 py-1 text-xs text-slate-200">
+            </div>
+            <div class="md:col-span-2">
+              <label class="block text-xs text-slate-400 mb-1">Published At</label>
+              <input type="datetime-local" name="published_at" class="w-full bg-slate-900 border border-slate-700 rounded px-2.5 py-1 text-xs text-slate-200">
+            </div>
+            <div class="md:col-span-2">
+              <label class="block text-xs text-slate-400 mb-1">Content *</label>
+              <textarea name="content" rows="2" required placeholder="Raw content or HTML content..." class="w-full bg-slate-900 border border-slate-700 rounded px-2.5 py-1 text-xs text-slate-200"></textarea>
+            </div>
+          </div>
+        </div>
+      `;
+
+            container.insertAdjacentHTML('beforeend', itemHTML);
+        }
+
+        function removeMentionField(cardId) {
+            const card = document.getElementById(cardId);
+            if (card) {
+                card.remove();
+            }
+        }
+
+        async function submitBulkIngest() {
+            const cards = document.querySelectorAll('.item-card');
+            if (!cards.length) {
+                alert('Please add at least one item before submitting.');
+                return;
+            }
+
+            const payload = [];
+
+            for (const card of cards) {
+                const external_id = card.querySelector('[name="external_id"]').value.trim();
+                const source = card.querySelector('[name="source"]').value.trim();
+                const title = card.querySelector('[name="title"]').value.trim() || null;
+                const url = card.querySelector('[name="url"]').value.trim();
+                const author = card.querySelector('[name="author"]').value.trim() || null;
+                const engagementVal = card.querySelector('[name="engagement"]').value.trim();
+                const publishedAtRaw = card.querySelector('[name="published_at"]').value;
+                const content = card.querySelector('[name="content"]').value.trim();
+
+                if (!external_id || !source || !url || !content) {
+                    alert('Please fill out all required fields (external_id, source, url, content) in every item.');
+                    return;
+                }
+
+                payload.push({
+                    external_id,
+                    source,
+                    title,
+                    content,
+                    url,
+                    author,
+                    // Sends as string containing numbers only (or "0" if left empty)
+                    engagement: engagementVal !== '' ? engagementVal : "0",
+                    published_at: publishedAtRaw ? new Date(publishedAtRaw).toISOString() : null
+                });
+            }
+
+            try {
+                const res = await fetch(`/internal/mentions/bulk`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                if (res.ok) {
+                    closeIngestModal();
+                    fetchData(); // Refresh UI tables and stats automatically
+                } else {
+                    const errData = await res.json();
+                    alert(`Error inserting data: ${errData.message || res.statusText}`);
+                }
+            } catch (err) {
+                alert('Failed to execute bulk insert POST request.');
+            }
+        }
+
+        // Initial load
+        fetchData();
+    </script>
+</body>
+
+</html>

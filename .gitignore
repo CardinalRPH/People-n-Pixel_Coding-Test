@@ -17,4 +17,4 @@ node_modules
 .pnp.*
 .env*
 
-dist/*
+dist

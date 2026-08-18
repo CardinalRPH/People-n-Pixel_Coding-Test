@@ -133,6 +133,9 @@ export const searchHandler = async (req: Request, res: Response, next: NextFunct
         ]);
 
         const total = parseInt(countRes.rows[0].count, 10);
+        const totalPages = Math.ceil(total / limit);
+
+        const hasNext = page < totalPages;
 
         return res.status(StatusCodes.OK).json({
             message: "Data Fetched",
@@ -141,7 +144,10 @@ export const searchHandler = async (req: Request, res: Response, next: NextFunct
                 page,
                 limit,
                 total,
-                totalPages: Math.ceil(total / limit),
+                totalPages,
+                hasNext,
+                nextPage: hasNext ? page + 1 : null,
+                prevPage: page > 1 ? page - 1 : null
             },
         });
 

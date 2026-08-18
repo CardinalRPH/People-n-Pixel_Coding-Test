@@ -56,7 +56,10 @@ export const searchQueryRouteConfig: RouteConfig = {
                             page: z.number().openapi({ example: 1 }),
                             limit: z.number().openapi({ example: 10 }),
                             total: z.number().openapi({ example: 100 }),
-                            totalPage: z.number().openapi({ example: 2 })
+                            totalPage: z.number().openapi({ example: 2 }),
+                            hasNext: z.boolean().openapi({ example: true }),
+                            nextPage: z.number().nullable().openapi({ example: 2 }),
+                            prevPage: z.number().nullable().openapi({ example: null }),
                         })
                     })
                 },
