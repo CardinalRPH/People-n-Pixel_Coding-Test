@@ -17,7 +17,7 @@ app.use(logger(currEnv === "production" ? "short" : "dev"));
 app.use(json())
 app.use(cors());
 app.use(urlencoded({ extended: false }));
-app.use(static_(join(__dirname, "public")));
+app.use(express.static(path.join(process.cwd(), 'public')));
 app.set("trust proxy", 1);
 
 // main router
