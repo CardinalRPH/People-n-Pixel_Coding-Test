@@ -5,6 +5,7 @@ import {
 } from '@asteasolutions/zod-to-openapi';
 import { z } from 'zod';
 import * as routes from "../schemas/swaggerSchemas";
+import processEnv from '../../env';
 
 // Extend with ZOD openAPI
 extendZodWithOpenApi(z);
@@ -30,7 +31,7 @@ export const getOpenApiDocumentation = () => {
         },
         servers: [
             {
-                url: 'http://localhost:3000/',
+                url: processEnv.BASE_URL!,
                 description: 'Development server',
             },
         ],

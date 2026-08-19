@@ -17,7 +17,7 @@ app.use(logger(currEnv === "production" ? "short" : "dev"));
 app.use(json())
 app.use(cors());
 app.use(urlencoded({ extended: false }));
-app.use(express.static(path.join(process.cwd(), 'public')));
+app.use(static_(join(__dirname, "public")));
 app.set("trust proxy", 1);
 
 // main router
@@ -26,7 +26,7 @@ app.use("/", indexRouter);
 app.use('/docs/v1/', swaggerUi.serve, swaggerUi.setup(openApiDocument));
 
 // fe route
-app.get('/fe', (req, res) => {
+app.get('/fe', (_req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 

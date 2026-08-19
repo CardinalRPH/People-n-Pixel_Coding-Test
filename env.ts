@@ -27,6 +27,8 @@ const envSchema = z.object({
     DATABASE_HOST: z.string(),
     DATABASE_PORT: z.coerce.number(),
 
+    BASE_URL: z.url().default(`http://localhost:${process.env.PORT}/`).optional()
+
 })
 
 const processEnv = envSchema.parse(process.env)
