@@ -39,7 +39,7 @@ export const bulkRawDataInsertRouteConfig: RouteConfig = {
 export const searchQueryRouteConfig: RouteConfig = {
     method: 'get',
     path: '/mentions',
-    summary: 'Search data by keyword, source, date range and can be sort order',
+    summary: 'Search data by keyword, source, date range',
     tags: ['Mention'],
     request: {
         query: searchQuerySchema
